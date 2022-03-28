@@ -1,0 +1,24 @@
+FROM libs-it-builder:latest as builder
+
+COPY /libs /libs
+
+# Build falcosecurity/libs
+RUN rm -rf /libs/build && mkdir /libs/build && \
+    cmake -DUSE_BUNDLED_DEPS=OFF -S /libs -B /libs/build && \
+    make -C /libs/build/libsinsp/examples sinsp-example
+
+FROM fedora:35 as runner
+
+RUN dnf install -y \
+    libcurl \
+    grpc-cpp \
+    grpc \
+    grpc-plugins \
+    jq \
+    jsoncpp \
+    openssl \
+    tbb
+
+COPY --from=builder /libs/build/libsinsp/examples/sinsp-example /usr/local/bin/sinsp-example
+
+ENTRYPOINT [ "sinsp-example" ]

@@ -1,0 +1,3 @@
+[submodule "falco-libs"]
+	path = libs
+	url = https://github.com/falcosecurity/libs
