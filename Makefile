@@ -11,7 +11,7 @@ scap.ko: builder
 		-v $(CURDIR)/libs:/libs \
 		-v /usr/include/bpf:/usr/include/bpf:ro \
 		-v /lib/modules/:/lib/modules/:ro \
-		-v /usr/src/kernels/:/usr/src/kernels/:ro \
+		-v /usr/src/:/usr/src/:ro \
 		libs-it-builder:latest "cmake -S /libs \
 		-DUSE_BUNDLED_DEPS=OFF \
 		-B /libs/build && \
