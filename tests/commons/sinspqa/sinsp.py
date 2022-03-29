@@ -79,7 +79,6 @@ def validate_event(expected_fields, event):
     Returns:
         True if all `expected_fields` are in the event and have matching values, False otherwise.
     """
-    print(expected_fields, event)
     for k in expected_fields:
         if k not in event:
             return False

@@ -16,4 +16,6 @@ COPY /test_* /tests/
 COPY /conftest.py /tests/conftest.py
 COPY /driver/scap.ko /driver/
 
-ENTRYPOINT [ "pytest" ]
+RUN mkdir -p /logs
+
+ENTRYPOINT [ "pytest", "--html=/report/report.html" ]

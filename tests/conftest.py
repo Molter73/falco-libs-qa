@@ -1,7 +1,9 @@
 import pytest
 import subprocess
 import docker
+import os
 from time import sleep
+from sinspqa import SINSP_LOG_PATH
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -47,4 +49,30 @@ def sinsp(docker_client):
                                          mounts=mounts)
     sleep(1)  # Wait for sinsp to start capturing
     yield sinsp
+    sinsp.stop()
+
+    # Dump all logs to a file for the report.
+    with open(SINSP_LOG_PATH, "w") as f:
+        f.write(sinsp.logs().decode("ascii"))
+
     sinsp.remove(force=True)
+
+
+def pytest_html_report_title(report):
+    report.title = "sinsp integration tests"
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    pytest_html = item.config.pluginmanager.getplugin("html")
+    outcome = yield
+    report = outcome.get_result()
+    extra = getattr(report, "extra", [])
+
+    if report.when == "teardown":
+        if os.path.isfile(SINSP_LOG_PATH):
+            with open(SINSP_LOG_PATH, "r", errors='replace') as f:
+                logs = f.read()
+                extra.append(pytest_html.extras.text(logs, name="sinsp.log"))
+
+    report.extra = extra
