@@ -6,6 +6,9 @@ from time import sleep
 
 @pytest.fixture(scope="session", autouse=True)
 def load_module():
+    """
+    Loads and unloads the scap.ko module to be used by the integration tests.
+    """
     subprocess.run(args=["insmod", "/driver/scap.ko"]).check_returncode()
     yield
     subprocess.run(["rmmod", "scap"]).check_returncode()
@@ -13,11 +16,26 @@ def load_module():
 
 @pytest.fixture()
 def docker_client():
+    """
+    Create a docker client to be used by the tests.
+
+    Returns:
+        A docker.DockerClient object created from the environment the tests run on.
+    """
     return docker.from_env()
 
 
 @pytest.fixture()
 def sinsp(docker_client):
+    """
+    Run a container with the `sinsp-example`.
+
+    Parameters:
+        docker_client (docker.DockerClient): A docker client used to create the container.
+
+    Returns:
+        A docker.Container running the `sinsp-example` binary.
+    """
     mounts = [
         docker.types.Mount("/dev", "/dev", type="bind",
                            consistency="delegated", read_only=True)

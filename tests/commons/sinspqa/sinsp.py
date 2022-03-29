@@ -5,11 +5,25 @@ import json
 
 
 class SinspStreamer:
+    """
+    Allows streaming of `sinsp-example` logs for analysis.
+    """
     def __init__(self, container, timeout=10):
+        """
+        Parameters:
+            container (docker.Container): A container object to stream logs from.
+            timeout (int): The maximum amount of time the streamer will read logs from the container.
+        """
         self.container = container
         self.timeout = timeout
 
     def read(self):
+        """
+        Reads logs from a container and returns them as a generator.
+
+        Returns:
+            A string holding a single log line from the container.
+        """
         logs = self.container.logs(stream=True, follow=False)
         start = datetime.now()
 
@@ -25,6 +39,15 @@ class SinspStreamer:
 
 
 def parse_log(log):
+    """
+    Parses a log line from the `sinsp-example` binary.
+
+    Parameters:
+        log (str): A string holding a single log line from `sinsp-example``
+
+    Returns:
+        A dictionary holding all the captured values for the event, except the timestamp.
+    """
     output = {}
 
     # Discard the time stamp
@@ -46,6 +69,16 @@ def parse_log(log):
 
 
 def validate_event(expected_fields, event):
+    """
+    Checks all `expected_fields` are in the `event`
+
+    Parameters:
+        expected_fields (dict): A dictionary holding the values expected in the event.
+        event (dict): A sinsp event parsed by calling `parse_log`
+
+    Returns:
+        True if all `expected_fields` are in the event and have matching values, False otherwise.
+    """
     print(expected_fields, event)
     for k in expected_fields:
         if k not in event:
