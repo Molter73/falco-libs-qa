@@ -8,6 +8,7 @@ class SinspStreamer:
     """
     Allows streaming of `sinsp-example` logs for analysis.
     """
+
     def __init__(self, container, timeout=10):
         """
         Parameters:
@@ -16,6 +17,7 @@ class SinspStreamer:
         """
         self.container = container
         self.timeout = timeout
+        self.last_timestamp = None
 
     def read(self):
         """
@@ -24,18 +26,34 @@ class SinspStreamer:
         Returns:
             A string holding a single log line from the container.
         """
-        logs = self.container.logs(stream=True, follow=False)
         start = datetime.now()
 
         while True:
             sleep(0.2)
 
-            for log in logs:
-                yield log.decode("ascii").strip()
+            for raw_log in self.container.logs(stream=True,
+                                               follow=False,
+                                               timestamps=True,
+                                               since=self.last_timestamp):
+                self.last_timestamp, log = self.extract_log(raw_log)
+                yield log
 
             if (datetime.now() - start).total_seconds() > self.timeout:
                 break
 
+    def extract_log(self, raw_log):
+        """
+        Split the docker log timestamp from the log line and return them
+
+        Parameters:
+            raw_log (binary): The log line as extracted from the logs call.
+
+        Returns:
+            A tuple holding a datetime object with the timestamp and a string with the log line.
+        """
+        decoded_log = raw_log.decode("ascii").strip()
+        split_log = decoded_log.split(" ")
+        return datetime.strptime(split_log[0][:-4], "%Y-%m-%dT%H:%M:%S.%f"), " ".join(split_log[1:])
 
 
 def parse_log(log):
