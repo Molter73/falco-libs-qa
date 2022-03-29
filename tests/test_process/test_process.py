@@ -3,6 +3,11 @@ import subprocess
 from sinspqa.sinsp import assert_events
 
 
+sinsp_filters = [
+    ["-f", "evt.category=process and evt.type=execve"]
+]
+
+@pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
 def test_process(sinsp):
     """
     Runs a simple test where a bash script is executed and a corresponding sinsp event is found in the provided

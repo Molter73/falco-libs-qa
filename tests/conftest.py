@@ -27,8 +27,8 @@ def docker_client():
     return docker.from_env()
 
 
-@pytest.fixture()
-def sinsp(docker_client):
+@pytest.fixture(scope="module")
+def sinsp(request, docker_client):
     """
     Run a container with the `sinsp-example`.
 
@@ -42,8 +42,11 @@ def sinsp(docker_client):
         docker.types.Mount("/dev", "/dev", type="bind",
                            consistency="delegated", read_only=True)
     ]
+
+    print(request.param)
+
     sinsp = docker_client.containers.run("sinsp-example:latest",
-                                         ["-f", "evt.category=process and evt.type=execve"],
+                                         request.param,
                                          detach=True,
                                          privileged=True,
                                          mounts=mounts)
