@@ -14,7 +14,7 @@ def load_module():
     subprocess.run(["rmmod", "scap"]).check_returncode()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session", autouse=True)
 def docker_client():
     """
     Create a docker client to be used by the tests.
