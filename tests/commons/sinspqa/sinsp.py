@@ -105,3 +105,16 @@ def validate_event(expected_fields, event):
             return False
 
     return True
+
+
+def assert_events(expected_events, container):
+    reader = SinspStreamer(container)
+
+    for event in expected_events:
+        success = False
+
+        for log in reader.read():
+            if validate_event(event, parse_log(log)):
+                success = True
+                break
+        assert success, f"Did not receive expected event: {event}"

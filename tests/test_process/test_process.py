@@ -1,6 +1,6 @@
 import pytest
 import subprocess
-from sinspqa.sinsp import SinspStreamer, parse_log, validate_event
+from sinspqa.sinsp import assert_events
 
 
 def test_process(sinsp):
@@ -11,22 +11,22 @@ def test_process(sinsp):
     Parameters:
         sinsp (docker.Container): A detached container running the `sinsp-example` binary
     """
-    success = False
-    expected_event = {
-        'is_host': False,
-        'cat': 'PROCESS',
-        'type': 'execve',
-        'exe': 'test_sample.sh',
-        'cmd': 'test_sample.sh bash ./test_sample.sh'
-    }
-
-    reader = SinspStreamer(sinsp)
+    expected_events = [
+        {
+            'is_host': False,
+            'cat': 'PROCESS',
+            'type': 'execve',
+            'exe': '/usr/bin/cat',
+            'cmd': 'cat /tmp/test.txt'
+        }, {
+            'is_host': False,
+            'cat': 'PROCESS',
+            'type': 'execve',
+            'exe': '/usr/bin/rm',
+            'cmd': 'rm -f /tmp/test.txt'
+        }
+    ]
 
     subprocess.run("./test_sample.sh")
 
-    for log in reader.read():
-        if validate_event(expected_event, parse_log(log)):
-            success = True
-            break
-
-    assert success
+    assert_events(expected_events, sinsp)
