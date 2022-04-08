@@ -56,36 +56,6 @@ class SinspStreamer:
         return datetime.strptime(split_log[0][:-4], "%Y-%m-%dT%H:%M:%S.%f"), " ".join(split_log[1:])
 
 
-def parse_log(log):
-    """
-    Parses a log line from the `sinsp-example` binary.
-
-    Parameters:
-        log (str): A string holding a single log line from `sinsp-example``
-
-    Returns:
-        A dictionary holding all the captured values for the event, except the timestamp.
-    """
-    output = {}
-
-    # Discard the time stamp
-    fields = log.split("[")[2:]
-    fields = "[".join(fields).split(":")
-
-    # Handle host vs. container ID
-    if fields[0] == "[HOST]":
-        output["is_host"] = True
-    else:
-        output["is_host"] = False
-        output["container_id"] = fields[0][1:-1]
-
-    for field in fields[1:]:
-        f = field.split("=")
-        output[f[0][1:].lower()] = f[1][:-1]
-
-    return output
-
-
 def validate_event(expected_fields, event):
     """
     Checks all `expected_fields` are in the `event`
@@ -108,13 +78,23 @@ def validate_event(expected_fields, event):
 
 
 def assert_events(expected_events, container):
+    """
+    Validate all expected events are triggered in the sinsp-example container
+
+    Parameter:
+        expected_events (list): A list of events as dictionaries.
+        container (docker.Container): A container handle to read logs from.
+
+    Returns:
+        True if all expected events are found, False otherwise.
+    """
     reader = SinspStreamer(container)
 
     for event in expected_events:
         success = False
 
         for log in reader.read():
-            if validate_event(event, parse_log(log)):
+            if validate_event(event, json.loads(log)):
                 success = True
                 break
         assert success, f"Did not receive expected event: {event}"

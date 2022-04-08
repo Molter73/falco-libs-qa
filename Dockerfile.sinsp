@@ -4,8 +4,10 @@ COPY /libs /libs
 
 # Build falcosecurity/libs
 RUN rm -rf /libs/build && mkdir /libs/build && \
-    cmake -DUSE_BUNDLED_DEPS=OFF -S /libs -B /libs/build && \
-    make -C /libs/build/libsinsp/examples sinsp-example
+    cmake -DUSE_BUNDLED_DEPS=OFF \
+        -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations \
+        -S /libs -B /libs/build && \
+    make -C /libs/build/libsinsp/examples sinsp-example -j$(nproc)
 
 FROM fedora:35 as runner
 
@@ -21,4 +23,4 @@ RUN dnf install -y \
 
 COPY --from=builder /libs/build/libsinsp/examples/sinsp-example /usr/local/bin/sinsp-example
 
-ENTRYPOINT [ "sinsp-example" ]
+ENTRYPOINT [ "sinsp-example", "-j" ]

@@ -18,17 +18,15 @@ def test_process(sinsp):
     """
     expected_events = [
         {
-            'is_host': False,
-            'cat': 'PROCESS',
-            'type': 'execve',
-            'exe': '/usr/bin/cat',
-            'cmd': 'cat /tmp/test.txt'
+            'evt.category': 'process',
+            'evt.type': 'execve',
+            'proc.exe': 'cat',
+            'proc.cmdline': 'cat /tmp/test.txt'
         }, {
-            'is_host': False,
-            'cat': 'PROCESS',
-            'type': 'execve',
-            'exe': '/usr/bin/rm',
-            'cmd': 'rm -f /tmp/test.txt'
+            'evt.category': 'process',
+            'evt.type': 'execve',
+            'proc.exe': 'rm',
+            'proc.cmdline': 'rm -f /tmp/test.txt'
         }
     ]
 
