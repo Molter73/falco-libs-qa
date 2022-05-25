@@ -11,6 +11,11 @@ def load_module():
     """
     Loads and unloads the scap.ko module to be used by the integration tests.
     """
+    if "BPF_PROBE" in os.environ:
+        # Runnning with the ebpf probe
+        yield
+        return
+
     subprocess.run(args=["insmod", "/driver/scap.ko"]).check_returncode()
     yield
     subprocess.run(["rmmod", "scap"]).check_returncode()
@@ -43,13 +48,19 @@ def sinsp(request, docker_client):
                            consistency="delegated", read_only=True)
     ]
 
+    environment = {}
+
+    if "BPF_PROBE" in os.environ:
+        environment["BPF_PROBE"] = os.environ.get("BPF_PROBE")
+
     print(request.param)
 
     sinsp = docker_client.containers.run("sinsp-example:latest",
                                          request.param,
                                          detach=True,
                                          privileged=True,
-                                         mounts=mounts)
+                                         mounts=mounts,
+                                         environment=environment)
     sleep(1)  # Wait for sinsp to start capturing
     yield sinsp
     sinsp.stop()
