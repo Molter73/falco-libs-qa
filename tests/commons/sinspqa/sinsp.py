@@ -1,7 +1,6 @@
-import docker
 from datetime import datetime
 from time import sleep
-import json
+import os
 
 
 class SinspStreamer:
@@ -118,3 +117,13 @@ def assert_events(expected_events, container):
                 success = True
                 break
         assert success, f"Did not receive expected event: {event}"
+
+
+def is_ebpf():
+    """
+    Checks if the tests are being run with eBPF.
+
+    Returns:
+        True if the test is running with the eBPF driver, False otherwise.
+    """
+    return "BPF_PROBE" in os.environ

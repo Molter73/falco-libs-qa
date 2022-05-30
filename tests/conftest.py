@@ -4,6 +4,7 @@ import docker
 import os
 from time import sleep
 from sinspqa import SINSP_LOG_PATH
+from sinspqa.sinsp import is_ebpf
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -11,7 +12,7 @@ def load_module():
     """
     Loads and unloads the scap.ko module to be used by the integration tests.
     """
-    if "BPF_PROBE" in os.environ:
+    if is_ebpf():
         # Runnning with the ebpf probe
         yield
         return
@@ -50,7 +51,7 @@ def sinsp(request, docker_client):
 
     environment = {}
 
-    if "BPF_PROBE" in os.environ:
+    if is_ebpf():
         environment["BPF_PROBE"] = os.environ.get("BPF_PROBE")
 
     print(request.param)
