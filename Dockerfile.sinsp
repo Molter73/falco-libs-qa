@@ -22,4 +22,4 @@ RUN dnf install -y \
 COPY --from=builder /libs/build/libsinsp/examples/sinsp-example /usr/local/bin/sinsp-example
 COPY /tests/driver/probe.o /driver/probe.o
 
-ENTRYPOINT [ "sinsp-example" ]
+ENTRYPOINT [ "sinsp-example", "-j" ]

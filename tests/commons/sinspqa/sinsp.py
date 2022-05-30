@@ -1,6 +1,7 @@
 from datetime import datetime
 from time import sleep
 import os
+import json
 
 
 class SinspStreamer:
@@ -65,24 +66,7 @@ def parse_log(log):
     Returns:
         A dictionary holding all the captured values for the event, except the timestamp.
     """
-    output = {}
-
-    # Discard the time stamp
-    fields = log.split("[")[2:]
-    fields = "[".join(fields).split(":")
-
-    # Handle host vs. container ID
-    if fields[0] == "[HOST]":
-        output["is_host"] = True
-    else:
-        output["is_host"] = False
-        output["container_id"] = fields[0][1:-1]
-
-    for field in fields[1:]:
-        f = field.split("=")
-        output[f[0][1:].lower()] = f[1][:-1]
-
-    return output
+    return json.loads(log)
 
 
 def validate_event(expected_fields, event):

@@ -34,6 +34,17 @@ def docker_client():
 
 
 @pytest.fixture(scope="module")
+def container_id(docker_client):
+    """
+    Get the truncated ID of the test runner.
+
+    Returns:
+        A 12 character string with the ID.
+    """
+    return docker_client.containers.get("falco-tester").id[:12]
+
+
+@pytest.fixture(scope="module")
 def sinsp(request, docker_client):
     """
     Run a container with the `sinsp-example`.
