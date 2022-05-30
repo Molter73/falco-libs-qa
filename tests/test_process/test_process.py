@@ -1,11 +1,12 @@
 import pytest
 import subprocess
-from sinspqa.sinsp import assert_events
+from sinspqa.sinsp import assert_events, is_ebpf
 
 
 sinsp_filters = [
     ["-f", "evt.category=process and evt.type=execve"]
 ]
+
 
 @pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
 def test_process(sinsp):
@@ -22,13 +23,13 @@ def test_process(sinsp):
             'cat': 'PROCESS',
             'type': 'execve',
             'exe': '/usr/bin/cat',
-            'cmd': 'cat /tmp/test.txt'
+            'cmd': 'cat /tmp/test.txt' if not is_ebpf() else "cat"
         }, {
             'is_host': False,
             'cat': 'PROCESS',
             'type': 'execve',
             'exe': '/usr/bin/rm',
-            'cmd': 'rm -f /tmp/test.txt'
+            'cmd': 'rm -f /tmp/test.txt' if not is_ebpf() else "rm"
         }
     ]
 
