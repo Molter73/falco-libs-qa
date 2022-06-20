@@ -1,6 +1,6 @@
 import pytest
 import subprocess
-from sinspqa.sinsp import assert_events, is_ebpf
+from sinspqa.sinsp import assert_events
 
 
 sinsp_filters = [

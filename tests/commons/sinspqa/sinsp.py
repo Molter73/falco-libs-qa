@@ -97,6 +97,9 @@ def assert_events(expected_events, container):
         success = False
 
         for log in reader.read():
+            if not log:
+                continue
+
             if validate_event(event, parse_log(log)):
                 success = True
                 break
