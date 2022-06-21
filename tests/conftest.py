@@ -34,7 +34,7 @@ def docker_client():
 
 
 @pytest.fixture(scope="module")
-def container_id(docker_client):
+def tester_id(docker_client):
     """
     Get the truncated ID of the test runner.
 
@@ -82,6 +82,29 @@ def sinsp(request, docker_client):
         f.write(sinsp.logs().decode("ascii"))
 
     sinsp.remove(force=True)
+
+
+@pytest.fixture(scope="function")
+def nginx_container(docker_client):
+    container = docker_client.containers.run(
+        "nginx:1.14-alpine",
+        detach=True,
+        auto_remove=True
+    )
+    yield container
+    container.stop()
+
+
+@pytest.fixture(scope="function")
+def curl_container(docker_client):
+    container = docker_client.containers.run(
+        "pstauffer/curl:latest",
+        ["sleep", "300"],
+        detach=True,
+        auto_remove=True
+    )
+    yield container
+    container.stop()
 
 
 def pytest_html_report_title(report):

@@ -1,5 +1,6 @@
 import pytest
 from sinspqa.sinsp import assert_events
+from sinspqa.docker import get_container_id
 
 
 sinsp_filters = [
@@ -7,23 +8,12 @@ sinsp_filters = [
 ]
 
 
-@pytest.fixture(scope="function")
-def nginx(docker_client):
-    container = docker_client.containers.run(
-        "nginx:1.14-alpine",
-        detach=True,
-        auto_remove=True
-    )
-    yield container
-    container.stop()
-
-
 @pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
-def test_exec_in_container(sinsp, nginx):
-    container_id = nginx.id[:12]
+def test_exec_in_container(sinsp, nginx_container):
+    container_id = get_container_id(nginx_container)
 
-    nginx.exec_run("sleep 5")
-    nginx.exec_run("sh -c ls")
+    nginx_container.exec_run("sleep 5")
+    nginx_container.exec_run("sh -c ls")
 
     expected_events = [
         {

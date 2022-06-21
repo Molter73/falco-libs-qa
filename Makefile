@@ -23,18 +23,24 @@ drivers: builder
 	rm -rf $(CURDIR)/libs/build/
 
 .PHONY: userspace
-userspace: builder drivers
+userspace: builder
 	docker build --tag sinsp-example:latest \
 		-f Dockerfile.sinsp .
 
 .PHONY: tests
-tests: userspace
+tests: userspace drivers
 	make -C tests
 
 .PHONY: clean
 clean:
 	docker rmi libs-it-builder:latest \
 		sinsp-example:latest \
-		falco-test-runner:latest
+		falco-test-runner:latest || true
 	rm -rf $(CURDIR)/libs/build
 	rm -rf $(CURDIR)/tests/driver/
+	rm -rf $(CURDIR)/libs/driver/bpf/probe.{ll,o}
+	rm -rf $(CURDIR)/libs/driver/bpf/.Module.symvers.cmd
+	rm -rf $(CURDIR)/libs/driver/bpf/Module.symvers
+	rm -rf $(CURDIR)/libs/driver/bpf/.modules.order.cmd
+	rm -rf $(CURDIR)/libs/driver/bpf/modules.order
+	rm -rf $(CURDIR)/libs/driver/driver_config.h

@@ -8,29 +8,6 @@ sinsp_filters = [
 ]
 
 
-@pytest.fixture(scope="function")
-def nginx(docker_client):
-    container = docker_client.containers.run(
-        "nginx:1.14-alpine",
-        detach=True,
-        auto_remove=True
-    )
-    yield container
-    container.stop()
-
-
-@pytest.fixture(scope="function")
-def curl(docker_client):
-    container = docker_client.containers.run(
-        "pstauffer/curl:latest",
-        ["sleep", "300"],
-        detach=True,
-        auto_remove=True
-    )
-    yield container
-    container.stop()
-
-
 def expected_events(origin: dict, destination: dict) -> list:
     return [
         {
@@ -98,20 +75,20 @@ def expected_events(origin: dict, destination: dict) -> list:
 
 
 @pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
-def test_curl_nginx(sinsp, nginx, curl):
+def test_curl_nginx(sinsp, nginx_container, curl_container):
     # Use a specific local port so validation of events is easier
     local_port = 40000
 
     destination = {
-        'id': get_container_id(nginx),
-        'ip': get_network_data(nginx)
+        'id': get_container_id(nginx_container),
+        'ip': get_network_data(nginx_container)
     }
     origin = {
-        'id': get_container_id(curl),
-        'ip': f'{get_network_data(curl)}:{local_port}',
+        'id': get_container_id(curl_container),
+        'ip': f'{get_network_data(curl_container)}:{local_port}',
         'local_port': local_port
     }
 
-    curl.exec_run(f'curl --local-port {local_port} {destination["ip"]}')
+    curl_container.exec_run(f'curl --local-port {local_port} {destination["ip"]}')
 
     assert_events(expected_events(origin, destination), sinsp)
