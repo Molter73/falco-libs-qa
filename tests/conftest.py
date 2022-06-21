@@ -3,7 +3,7 @@ import subprocess
 import docker
 import os
 from time import sleep
-from sinspqa import SINSP_LOG_PATH
+from sinspqa import SINSP_LOG_PATH, LOGS_PATH
 from sinspqa.sinsp import is_ebpf
 
 
@@ -65,8 +65,6 @@ def sinsp(request, docker_client):
     if is_ebpf():
         environment["BPF_PROBE"] = os.environ.get("BPF_PROBE")
 
-    print(request.param)
-
     sinsp = docker_client.containers.run("sinsp-example:latest",
                                          request.param,
                                          detach=True,
@@ -88,11 +86,17 @@ def sinsp(request, docker_client):
 def nginx_container(docker_client):
     container = docker_client.containers.run(
         "nginx:1.14-alpine",
-        detach=True,
-        auto_remove=True
+        detach=True
     )
     yield container
     container.stop()
+
+    logs = container.logs().decode('ascii')
+    if logs:
+        with open(os.path.join(LOGS_PATH, 'nginx.log'), 'w') as f:
+            f.write(logs)
+
+    container.remove()
 
 
 @pytest.fixture(scope="function")
@@ -100,15 +104,35 @@ def curl_container(docker_client):
     container = docker_client.containers.run(
         "pstauffer/curl:latest",
         ["sleep", "300"],
-        detach=True,
-        auto_remove=True
+        detach=True
     )
     yield container
     container.stop()
 
+    logs = container.logs().decode('ascii')
+    if logs:
+        with open(os.path.join(LOGS_PATH, 'curl.log'), 'w') as f:
+            f.write(logs)
+
+    container.remove()
+
 
 def pytest_html_report_title(report):
     report.title = "sinsp integration tests"
+
+
+def dump_logs(pytest_html, extra):
+    for file in os.listdir(LOGS_PATH):
+        full_path = os.path.join(LOGS_PATH, file)
+        if not os.path.isfile(full_path):
+            continue
+
+        with open(full_path, 'r', errors='replace') as f:
+            logs = f.read()
+            extra.append(pytest_html.extras.text(logs, name=file))
+
+        # Remove file so it doesn't bleed to following tests
+        os.remove(full_path)
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -119,9 +143,6 @@ def pytest_runtest_makereport(item, call):
     extra = getattr(report, "extra", [])
 
     if report.when == "teardown":
-        if os.path.isfile(SINSP_LOG_PATH):
-            with open(SINSP_LOG_PATH, "r", errors='replace') as f:
-                logs = f.read()
-                extra.append(pytest_html.extras.text(logs, name="sinsp.log"))
+        dump_logs(pytest_html, extra)
 
     report.extra = extra
