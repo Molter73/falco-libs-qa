@@ -83,38 +83,36 @@ def sinsp(request, docker_client):
 
 
 @pytest.fixture(scope="function")
-def nginx_container(docker_client):
-    container = docker_client.containers.run(
-        "nginx:1.14-alpine",
-        detach=True
-    )
-    yield container
-    container.stop()
+def run_containers(request, docker_client):
+    """
+    Runs containers, dumps their logs and cleans'em up
+    """
+    print(request.param)
 
-    logs = container.logs().decode('ascii')
-    if logs:
-        with open(os.path.join(LOGS_PATH, 'nginx.log'), 'w') as f:
-            f.write(logs)
+    containers = {}
 
-    container.remove()
+    for name, container in request.param.items():
+        image = container['image']
+        args = container.get('args', '')
+        handle = docker_client.containers.run(
+            image,
+            args,
+            name=name,
+            detach=True
+        )
+        containers[name] = handle
 
+    yield containers
 
-@pytest.fixture(scope="function")
-def curl_container(docker_client):
-    container = docker_client.containers.run(
-        "pstauffer/curl:latest",
-        ["sleep", "300"],
-        detach=True
-    )
-    yield container
-    container.stop()
+    for name, container in containers.items():
+        container.stop()
 
-    logs = container.logs().decode('ascii')
-    if logs:
-        with open(os.path.join(LOGS_PATH, 'curl.log'), 'w') as f:
-            f.write(logs)
+        logs = container.logs().decode('ascii')
+        if logs:
+            with open(os.path.join(LOGS_PATH, f'{name}.log'), 'w') as f:
+                f.write(logs)
 
-    container.remove()
+        container.remove()
 
 
 def pytest_html_report_title(report):

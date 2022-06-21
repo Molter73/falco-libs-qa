@@ -8,8 +8,18 @@ sinsp_filters = [
 ]
 
 
+containers = [{
+    'nginx': {
+        'image': 'nginx:1.14-alpine',
+    }
+}]
+
+
 @pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
-def test_exec_in_container(sinsp, nginx_container):
+@pytest.mark.parametrize("run_containers", containers, indirect=True)
+def test_exec_in_container(sinsp, run_containers):
+    nginx_container = run_containers['nginx']
+
     container_id = get_container_id(nginx_container)
 
     nginx_container.exec_run("sleep 5")

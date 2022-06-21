@@ -7,6 +7,16 @@ sinsp_filters = [
     ["-f", "evt.category=net and not container.id=host"]
 ]
 
+containers = [{
+    'nginx': {
+        'image': 'nginx:1.14-alpine',
+    },
+    'curl': {
+        'image': 'pstauffer/curl:latest',
+        'args': ["sleep", "300"]
+    }
+}]
+
 
 def expected_events(origin: dict, destination: dict) -> list:
     return [
@@ -75,9 +85,13 @@ def expected_events(origin: dict, destination: dict) -> list:
 
 
 @pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
-def test_curl_nginx(sinsp, nginx_container, curl_container):
+@pytest.mark.parametrize("run_containers", containers, indirect=True)
+def test_curl_nginx(sinsp, run_containers):
     # Use a specific local port so validation of events is easier
     local_port = 40000
+
+    nginx_container = run_containers['nginx']
+    curl_container = run_containers['curl']
 
     destination = {
         'id': get_container_id(nginx_container),
