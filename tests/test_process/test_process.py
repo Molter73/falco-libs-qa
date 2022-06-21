@@ -1,15 +1,18 @@
 import pytest
 import subprocess
+from sinspqa import sinsp
 from sinspqa.sinsp import assert_events
 
 
-sinsp_filters = [
-    ["-f", "evt.category=process and evt.type=execve"]
-]
+sinsp_filters = ["-f", "evt.category=process and evt.type=execve"]
+
+containers = [{
+    'sinsp': sinsp.container_spec(args=sinsp_filters)
+}]
 
 
-@pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
-def test_process(sinsp, tester_id):
+@pytest.mark.parametrize("run_containers", containers, indirect=True)
+def test_process(run_containers, tester_id):
     """
     Runs a simple test where a bash script is executed and a corresponding sinsp event is found in the provided
     container's logs
@@ -17,6 +20,8 @@ def test_process(sinsp, tester_id):
     Parameters:
         sinsp (docker.Container): A detached container running the `sinsp-example` binary
     """
+    sinsp_container = run_containers['sinsp']
+
     expected_events = [
         {
             'container.id': tester_id,
@@ -35,4 +40,4 @@ def test_process(sinsp, tester_id):
 
     subprocess.run("./test_sample.sh")
 
-    assert_events(expected_events, sinsp)
+    assert_events(expected_events, sinsp_container)

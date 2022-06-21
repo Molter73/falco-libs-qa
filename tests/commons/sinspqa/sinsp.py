@@ -2,6 +2,7 @@ from datetime import datetime
 from time import sleep
 import os
 import json
+import docker
 
 
 class SinspStreamer:
@@ -114,3 +115,23 @@ def is_ebpf():
         True if the test is running with the eBPF driver, False otherwise.
     """
     return "BPF_PROBE" in os.environ
+
+
+def container_spec(image='sinsp-example:latest', args=[]):
+    mounts = [
+        docker.types.Mount("/dev", "/dev", type="bind",
+                           consistency="delegated", read_only=True)
+    ]
+    environment = {}
+
+    if is_ebpf():
+        environment["BPF_PROBE"] = os.environ.get("BPF_PROBE")
+
+    return {
+        'image': image,
+        'args': args,
+        'mounts': mounts,
+        'env': environment,
+        'privileged': True,
+        'init_wait': 2
+    }

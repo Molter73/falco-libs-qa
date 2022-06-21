@@ -1,13 +1,12 @@
 import pytest
+from sinspqa import sinsp
 from sinspqa.sinsp import assert_events
 from sinspqa.docker import get_container_id, get_network_data
 
-
-sinsp_filters = [
-    ["-f", "evt.category=net and not container.id=host"]
-]
+sinsp_filters = ["-f", "evt.category=net and not container.id=host"]
 
 containers = [{
+    'sinsp': sinsp.container_spec(args=sinsp_filters),
     'nginx': {
         'image': 'nginx:1.14-alpine',
     },
@@ -84,12 +83,12 @@ def expected_events(origin: dict, destination: dict) -> list:
     ]
 
 
-@pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
 @pytest.mark.parametrize("run_containers", containers, indirect=True)
-def test_curl_nginx(sinsp, run_containers):
+def test_curl_nginx(run_containers):
     # Use a specific local port so validation of events is easier
     local_port = 40000
 
+    sinsp_container = run_containers['sinsp']
     nginx_container = run_containers['nginx']
     curl_container = run_containers['curl']
 
@@ -105,4 +104,4 @@ def test_curl_nginx(sinsp, run_containers):
 
     curl_container.exec_run(f'curl --local-port {local_port} {destination["ip"]}')
 
-    assert_events(expected_events(origin, destination), sinsp)
+    assert_events(expected_events(origin, destination), sinsp_container)

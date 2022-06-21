@@ -44,42 +44,20 @@ def tester_id(docker_client):
     return docker_client.containers.get("falco-tester").id[:12]
 
 
-@pytest.fixture(scope="module")
-def sinsp(request, docker_client):
-    """
-    Run a container with the `sinsp-example`.
+def wait_container_running(container: docker.models.containers.Container, additional_wait):
+    retries = 6
+    container.reload()
 
-    Parameters:
-        docker_client (docker.DockerClient): A docker client used to create the container.
+    while container.status != 'running':
+        retries -= 1
+        if retries == 0:
+            raise TimeoutError
 
-    Returns:
-        A docker.Container running the `sinsp-example` binary.
-    """
-    mounts = [
-        docker.types.Mount("/dev", "/dev", type="bind",
-                           consistency="delegated", read_only=True)
-    ]
+        sleep(0.5)
+        container.reload()
 
-    environment = {}
-
-    if is_ebpf():
-        environment["BPF_PROBE"] = os.environ.get("BPF_PROBE")
-
-    sinsp = docker_client.containers.run("sinsp-example:latest",
-                                         request.param,
-                                         detach=True,
-                                         privileged=True,
-                                         mounts=mounts,
-                                         environment=environment)
-    sleep(1)  # Wait for sinsp to start capturing
-    yield sinsp
-    sinsp.stop()
-
-    # Dump all logs to a file for the report.
-    with open(SINSP_LOG_PATH, "w") as f:
-        f.write(sinsp.logs().decode("ascii"))
-
-    sinsp.remove(force=True)
+    if additional_wait:
+        sleep(additional_wait)
 
 
 @pytest.fixture(scope="function")
@@ -94,13 +72,23 @@ def run_containers(request, docker_client):
     for name, container in request.param.items():
         image = container['image']
         args = container.get('args', '')
+        privileged = container.get('privileged', False)
+        mounts = container.get('mounts', [])
+        environment = container.get('env', {})
+        additional_wait = container.get('init_wait', 0)
+
         handle = docker_client.containers.run(
             image,
             args,
             name=name,
-            detach=True
+            detach=True,
+            privileged=privileged,
+            mounts=mounts,
+            environment=environment
         )
+
         containers[name] = handle
+        wait_container_running(handle, additional_wait)
 
     yield containers
 

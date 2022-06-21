@@ -1,24 +1,22 @@
 import pytest
+from sinspqa import sinsp
 from sinspqa.sinsp import assert_events
 from sinspqa.docker import get_container_id
 
-
-sinsp_filters = [
-    ["-f", "evt.category=process and not container.id=host"]
-]
-
+sinsp_filters = ["-f", "evt.category=process and not container.id=host"]
 
 containers = [{
+    'sinsp': sinsp.container_spec(args=sinsp_filters),
     'nginx': {
         'image': 'nginx:1.14-alpine',
     }
 }]
 
 
-@pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
 @pytest.mark.parametrize("run_containers", containers, indirect=True)
-def test_exec_in_container(sinsp, run_containers):
+def test_exec_in_container(run_containers):
     nginx_container = run_containers['nginx']
+    sinsp_container = run_containers['sinsp']
 
     container_id = get_container_id(nginx_container)
 
@@ -54,4 +52,4 @@ def test_exec_in_container(sinsp, run_containers):
         }
     ]
 
-    assert_events(expected_events, sinsp)
+    assert_events(expected_events, sinsp_container)
