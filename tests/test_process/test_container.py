@@ -19,7 +19,7 @@ def nginx(docker_client):
 
 
 @pytest.mark.parametrize("sinsp", sinsp_filters, indirect=True)
-def test_process(sinsp, nginx):
+def test_exec_in_container(sinsp, nginx):
     container_id = nginx.id[:12]
 
     nginx.exec_run("sleep 5")
