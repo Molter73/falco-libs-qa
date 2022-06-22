@@ -23,12 +23,12 @@ drivers: builder
 	rm -rf $(CURDIR)/libs/build/
 
 .PHONY: userspace
-userspace: builder
+userspace: builder drivers
 	docker build --tag sinsp-example:latest \
 		-f Dockerfile.sinsp .
 
 .PHONY: tests
-tests: userspace drivers
+tests: userspace
 	make -C tests
 
 .PHONY: clean
