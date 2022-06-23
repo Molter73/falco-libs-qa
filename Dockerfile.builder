@@ -3,6 +3,7 @@ FROM fedora:36
 RUN dnf install -y \
     gcc \
     gcc-c++ \
+    libasan \
     git \
     make \
     cmake \

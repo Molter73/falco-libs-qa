@@ -117,6 +117,15 @@ def is_ebpf():
     return "BPF_PROBE" in os.environ
 
 
+def sinsp_validation(container: docker.models.containers.Container) -> (bool, str):
+    container.reload()
+    exit_code = container.attrs['State']['ExitCode']
+    if exit_code != 0:
+        return False, f'container exited with code {exit_code}'
+
+    return True, None
+
+
 def container_spec(image='sinsp-example:latest', args=[]):
     mounts = [
         docker.types.Mount("/dev", "/dev", type="bind",
@@ -133,5 +142,6 @@ def container_spec(image='sinsp-example:latest', args=[]):
         'mounts': mounts,
         'env': environment,
         'privileged': True,
-        'init_wait': 2
+        'init_wait': 2,
+        'post_validation': sinsp_validation
     }

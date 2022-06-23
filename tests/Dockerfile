@@ -2,8 +2,8 @@ FROM fedora:36
 
 WORKDIR /tests
 
-RUN curl -fsSL https://get.docker.com -o get-docker.sh && \
-    sh get-docker.sh && \
+RUN dnf makecache && \
+    curl -fsSL https://get.docker.com | sh && \
     dnf install -y pip
 
 COPY /requirements.txt /tests/

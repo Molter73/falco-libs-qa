@@ -68,6 +68,7 @@ def run_containers(request, docker_client):
     print(request.param)
 
     containers = {}
+    validations = {}
 
     for name, container in request.param.items():
         image = container['image']
@@ -76,6 +77,7 @@ def run_containers(request, docker_client):
         mounts = container.get('mounts', [])
         environment = container.get('env', {})
         additional_wait = container.get('init_wait', 0)
+        post_validation = container.get('post_validation', None)
 
         handle = docker_client.containers.run(
             image,
@@ -88,9 +90,15 @@ def run_containers(request, docker_client):
         )
 
         containers[name] = handle
+        if post_validation:
+            validations[name] = post_validation
+
         wait_container_running(handle, additional_wait)
 
     yield containers
+
+    success = True
+    errors = []
 
     for name, container in containers.items():
         container.stop()
@@ -100,7 +108,16 @@ def run_containers(request, docker_client):
             with open(os.path.join(LOGS_PATH, f'{name}.log'), 'w') as f:
                 f.write(logs)
 
+        if name in validations:
+            v = validations[name]
+            res, msg = v(container)
+            if not res:
+                errors.append(f'{name}: {msg}')
+                success = False
+
         container.remove()
+
+    assert success, '\n'.join(errors)
 
 
 def pytest_html_report_title(report):

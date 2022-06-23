@@ -4,7 +4,13 @@ COPY /libs /libs
 
 # Build falcosecurity/libs
 RUN rm -rf /libs/build && mkdir /libs/build && \
-    cmake -DUSE_BUNDLED_DEPS=OFF -S /libs -B /libs/build && \
+    cmake -DUSE_BUNDLED_DEPS=OFF \
+          -DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address" \
+          -DCMAKE_C_FLAGS_DEBUG="-fsanitize=address" \
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
+           -S /libs \
+           -B /libs/build && \
     make -j"$(nproc)" -C /libs/build/libsinsp/examples sinsp-example
 
 FROM fedora:36 as runner
@@ -17,6 +23,7 @@ RUN dnf install -y \
     jq \
     jsoncpp \
     openssl \
+    libasan \
     tbb
 
 COPY --from=builder /libs/build/libsinsp/examples/sinsp-example /usr/local/bin/sinsp-example
