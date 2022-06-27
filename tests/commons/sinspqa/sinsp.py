@@ -143,5 +143,6 @@ def container_spec(image='sinsp-example:latest', args=[]):
         'env': environment,
         'privileged': True,
         'init_wait': 2,
-        'post_validation': sinsp_validation
+        'post_validation': sinsp_validation,
+        'signal': "SIGINT"
     }

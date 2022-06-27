@@ -65,10 +65,8 @@ def run_containers(request, docker_client):
     """
     Runs containers, dumps their logs and cleans'em up
     """
-    print(request.param)
-
     containers = {}
-    validations = {}
+    post = {}
 
     for name, container in request.param.items():
         image = container['image']
@@ -78,6 +76,7 @@ def run_containers(request, docker_client):
         environment = container.get('env', {})
         additional_wait = container.get('init_wait', 0)
         post_validation = container.get('post_validation', None)
+        stop_signal = container.get('signal', None)
 
         handle = docker_client.containers.run(
             image,
@@ -90,8 +89,10 @@ def run_containers(request, docker_client):
         )
 
         containers[name] = handle
-        if post_validation:
-            validations[name] = post_validation
+        post[name] = {
+            'validation': post_validation,
+            'signal': stop_signal
+        }
 
         wait_container_running(handle, additional_wait)
 
@@ -101,6 +102,14 @@ def run_containers(request, docker_client):
     errors = []
 
     for name, container in containers.items():
+        validation = post[name]['validation']
+        stop_signal = post[name]['signal']
+
+        if stop_signal:
+            container.kill(stop_signal)
+
+        # The stop command is issued regardless of the kill command to ensure
+        # the container stops
         container.stop()
 
         logs = container.logs().decode('ascii')
@@ -108,9 +117,8 @@ def run_containers(request, docker_client):
             with open(os.path.join(LOGS_PATH, f'{name}.log'), 'w') as f:
                 f.write(logs)
 
-        if name in validations:
-            v = validations[name]
-            res, msg = v(container)
+        if validation:
+            res, msg = validation(container)
             if not res:
                 errors.append(f'{name}: {msg}')
                 success = False
