@@ -13,7 +13,7 @@ jobs:
     name: Submodule update
     runs-on: ubuntu-latest
     env:
-      PARENT_REPOSITORY: 'molter73/flaco-libs-qa'
+      PARENT_REPOSITORY: 'molter73/falco-libs-qa'
       CHECKOUT_BRANCH: 'master'
       PR_AGAINST_BRANCH: 'master'
       OWNER: 'molter73'
