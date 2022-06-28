@@ -17,3 +17,10 @@ jobs:
 
     - name: Build and test Falco/libs
       run: make tests
+
+    - name: Archive test reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-reports
+        path: |
+          tests/reports/
