@@ -3,10 +3,6 @@ name: Update libs
 on:
   schedule:
     - cron: '0 0 * * 1'
-  push:
-    branches-ignore: [master, main]
-  pull_request:
-    branches: [master, main]
 
 jobs:
   build:
