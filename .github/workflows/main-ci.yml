@@ -25,7 +25,7 @@ jobs:
       uses: addnab/docker-run-action@v3
       with:
         image: libs-it-builder:latest
-        options: -v {{ github.workspace }}/libs:/libs -v /usr/include/bpf:/usr/include/bpf:ro -v /lib/modules/:/lib/modules/:ro -v /usr/src/:/usr/src/:ro
+        options: -v ${{ github.workspace }}/libs:/libs -v /usr/include/bpf:/usr/include/bpf:ro -v /lib/modules/:/lib/modules/:ro -v /usr/src/:/usr/src/:ro
         run: |
           cmake -S /libs \
             -DUSE_BUNDLED_DEPS=OFF \
