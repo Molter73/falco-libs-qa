@@ -12,6 +12,7 @@ drivers: builder
 		-v /usr/include/bpf:/usr/include/bpf:ro \
 		-v /lib/modules/:/lib/modules/:ro \
 		-v /usr/src/:/usr/src/:ro \
+		--user $(shell id -u):$(shell id -g) \
 		libs-it-builder:latest "cmake -S /libs \
 		-DUSE_BUNDLED_DEPS=OFF \
 		-DBUILD_BPF=ON \
