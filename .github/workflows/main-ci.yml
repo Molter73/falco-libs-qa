@@ -24,4 +24,4 @@ jobs:
       with:
         name: test-reports
         path: |
-          tests/reports/
+          tests/report/
