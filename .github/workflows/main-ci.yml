@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,16 +15,5 @@ jobs:
       with:
         submodules: true
 
-    - name: Install kernel headers
-      run: |
-        sudo apt update
-        sudo apt install -y linux-headers-$(uname -r)
-
-    - name: Build builder image
-      run: make builder
-
-    - name: Build drivers
-      run: make drivers
-
-    - name: Build userspace
-      run: make userspace
+    - name: Build and test Falco/libs
+      run: make tests
