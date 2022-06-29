@@ -9,6 +9,7 @@ builder:
 		-f Dockerfile.builder $(CURDIR)
 
 drivers: builder
+	@mkdir -p $(CURDIR)/build/driver-build/
 	docker run --rm --name kernel-builder \
 		-v $(CURDIR)/libs:/libs \
 		-v $(CURDIR)/build:/build \
@@ -27,6 +28,7 @@ drivers: builder
 
 .PHONY: userspace
 userspace: builder drivers
+	@mkdir -p $(CURDIR)/build/userspace-build/
 	docker run --rm --name userspace-builder \
 		-v $(CURDIR)/libs:/libs \
 		-v $(CURDIR)/build:/build \
