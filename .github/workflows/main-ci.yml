@@ -16,7 +16,7 @@ jobs:
         submodules: true
 
     - name: Build and test Falco/libs
-      run: make tests
+      run: PARALLEL_BUILDS="$(nproc)" make tests
 
     - name: Archive test reports
       uses: actions/upload-artifact@v3

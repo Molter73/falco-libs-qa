@@ -1,14 +1,18 @@
 .PHONY: all
 all: tests
 
+PARALLEL_BUILDS ?= 6
+
 .PHONY: builder
 builder:
 	docker build --tag libs-it-builder:latest \
-		-f Dockerfile.builder .
+		-f Dockerfile.builder $(CURDIR)
 
 drivers: builder
+	@mkdir -p $(CURDIR)/build/driver-build/
 	docker run --rm --name kernel-builder \
 		-v $(CURDIR)/libs:/libs \
+		-v $(CURDIR)/build:/build \
 		-v /usr/include/bpf:/usr/include/bpf:ro \
 		-v /lib/modules/:/lib/modules/:ro \
 		-v /usr/src/:/usr/src/:ro \
@@ -16,17 +20,31 @@ drivers: builder
 		libs-it-builder:latest "cmake -S /libs \
 		-DUSE_BUNDLED_DEPS=OFF \
 		-DBUILD_BPF=ON \
-		-B /libs/build && \
-		make -C /libs/build/driver"
+		-B /build/driver-build && \
+		make -j$(PARALLEL_BUILDS) -C /build/driver-build/driver"
 	@mkdir -p $(CURDIR)/tests/driver/
-	cp $(CURDIR)/libs/build/driver/src/scap.ko $(CURDIR)/tests/driver/scap.ko
-	cp $(CURDIR)/libs/build/driver/bpf/probe.o $(CURDIR)/tests/driver/probe.o
-	rm -rf $(CURDIR)/libs/build/
+	cp $(CURDIR)/build/driver-build/driver/src/scap.ko $(CURDIR)/tests/driver/scap.ko
+	cp $(CURDIR)/build/driver-build/driver/bpf/probe.o $(CURDIR)/tests/driver/probe.o
 
 .PHONY: userspace
 userspace: builder drivers
+	@mkdir -p $(CURDIR)/build/userspace-build/
+	docker run --rm --name userspace-builder \
+		-v $(CURDIR)/libs:/libs \
+		-v $(CURDIR)/build:/build \
+		--user $(shell id -u):$(shell id -g) \
+		libs-it-builder:latest "cmake -DUSE_BUNDLED_DEPS=OFF \
+			-DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address" \
+			-DCMAKE_C_FLAGS_DEBUG="-fsanitize=address" \
+			-DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
+			-DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
+			-S /libs \
+			-B /build/userspace-build && \
+		make -j$(PARALLEL_BUILDS) -C /build/userspace-build/libsinsp/examples sinsp-example"
+	@mkdir -p $(CURDIR)/tests/userspace/
+	cp $(CURDIR)/build/userspace-build/libsinsp/examples/sinsp-example $(CURDIR)/tests/userspace/sinsp-example
 	docker build --tag sinsp-example:latest \
-		-f Dockerfile.sinsp .
+		-f Dockerfile.sinsp $(CURDIR)
 
 .PHONY: tests
 tests: userspace
@@ -37,8 +55,10 @@ clean:
 	docker rmi libs-it-builder:latest \
 		sinsp-example:latest \
 		falco-test-runner:latest || true
-	rm -rf $(CURDIR)/libs/build
+	rm -rf $(CURDIR)/build/
 	rm -rf $(CURDIR)/tests/driver/
+	rm -rf $(CURDIR)/tests/userspace/
+	rm -rf $(CURDIR)/tests/report/
 	rm -rf $(CURDIR)/libs/driver/bpf/probe.{ll,o}
 	rm -rf $(CURDIR)/libs/driver/bpf/.Module.symvers.cmd
 	rm -rf $(CURDIR)/libs/driver/bpf/Module.symvers

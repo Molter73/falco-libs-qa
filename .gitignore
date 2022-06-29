@@ -1,3 +1,4 @@
 build/
 tests/driver/
+tests/userspace/
 tests/report/
