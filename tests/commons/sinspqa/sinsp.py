@@ -127,7 +127,7 @@ def validate_event(expected_fields, event):
 
         expected = expected_fields[k]
 
-        if isinstance(expected, str):
+        if isinstance(expected, str) or expected is None:
             if expected == event[k]:
                 continue
             return False
