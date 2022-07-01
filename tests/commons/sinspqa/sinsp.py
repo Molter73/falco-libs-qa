@@ -3,8 +3,11 @@ from time import sleep
 import os
 import json
 import docker
+import re
+from enum import Enum
 
 SINSP_TAG = os.environ.get('SINSP_TAG', 'latest')
+
 
 class SinspStreamer:
     """
@@ -58,6 +61,42 @@ class SinspStreamer:
         return datetime.strptime(split_log[0][:-4], "%Y-%m-%dT%H:%M:%S.%f"), " ".join(split_log[1:])
 
 
+class SinspFieldTypes(Enum):
+    STRING = 0
+    REGEX = 1
+
+
+class SinspField:
+    """
+    Stores the value expected in a field output by sinsp-example.
+    """
+    def __init__(self, value, value_type=SinspFieldTypes.STRING):
+        self.value_type = value_type
+
+        if self.value_type == SinspFieldTypes.REGEX:
+            self.value = re.compile(value)
+        else:
+            self.value = value
+
+    def compare(self, other: str) -> bool:
+        if self.value_type == SinspFieldTypes.REGEX:
+            return self.value.match(other)
+
+        return self.value == other
+
+    def __repr__(self):
+        if self.value_type == SinspFieldTypes.REGEX:
+            return f"r'{self.value.pattern}'"
+        else:
+            return self.value
+
+    def numeric_field():
+        return SinspField(r'^\d+$', SinspFieldTypes.REGEX)
+
+    def regex_field(regex: str):
+        return SinspField(regex, SinspFieldTypes.REGEX)
+
+
 def parse_log(log):
     """
     Parses a log line from the `sinsp-example` binary.
@@ -86,7 +125,14 @@ def validate_event(expected_fields, event):
         if k not in event:
             return False
 
-        if event[k] != expected_fields[k]:
+        expected = expected_fields[k]
+
+        if isinstance(expected, str):
+            if expected == event[k]:
+                continue
+            return False
+
+        if not expected.compare(str(event[k])):
             return False
 
     return True
@@ -145,5 +191,4 @@ def container_spec(image=f'quay.io/mmoltras/sinsp-example:{SINSP_TAG}', args=[])
         'privileged': True,
         'init_wait': 2,
         'post_validation': sinsp_validation,
-        'signal': "SIGINT"
     }
