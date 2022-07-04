@@ -2,4 +2,3 @@ build/
 tests/driver/
 tests/userspace/
 tests/report/
-__pycache__/

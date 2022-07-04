@@ -17,14 +17,6 @@ def create_expected_arg(directory):
     return fr'^fd=3\(<f>{re.escape(directory)}\/created-by-event-generator\) dirfd=-100\(AT_FDCWD\) name={re.escape(directory)}\/created-by-event-generator flags=4358\(O_TRUNC\|O_CREAT\|O_WRONLY\|O_CLOEXEC\) mode=0755 dev=.* ino=\d+ $'
 
 
-containers = [
-    create_containers('syscall.WriteBelowEtc')
-]
-
-expected_args = [
-    create_expected_arg('/etc')
-]
-
 parameters = [
     (create_containers('syscall.WriteBelowEtc'), create_expected_arg('/etc')),
     (create_containers('syscall.WriteBelowBinaryDir'), create_expected_arg('/bin')),
