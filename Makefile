@@ -9,7 +9,7 @@ builder:
 	docker build \
 		--tag quay.io/mmoltras/falco-libs-builder:latest \
 		--cache-from quay.io/mmoltras/falco-libs-builder:latest \
-		-f $(CURDIR)/containers/Dockerfile.builder $(CURDIR)/containers/
+		-f $(CURDIR)/containers/builder.Dockerfile $(CURDIR)/containers/
 
 drivers: builder
 	@mkdir -p $(CURDIR)/build/driver-build/
