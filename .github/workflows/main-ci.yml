@@ -27,3 +27,27 @@ jobs:
         name: test-reports
         path: |
           tests/report/
+
+    - name: Login to Quay.io
+      if: github.ref == 'refs/heads/cache-images'
+      uses: docker/login-action@v2
+      with:
+        registry: quay.io
+        username: ${{ secrets.QUAY_USERNAME }}
+        password: ${{ secrets.QUAY_TOKEN }}
+
+    - name: Push builder cache
+      if: github.ref == 'refs/heads/cache-images'
+      run: |
+        docker tag \
+          "quay.io/mmoltras/falco-libs-builder:$(git branch --show-current)" \
+          quay.io/mmoltras/falco-libs-builder:latest
+        docker push quay.io/mmoltras/falco-libs-builder:latest
+
+    - name: Push runner cache
+      if: github.ref == 'refs/heads/cache-images'
+      run: |
+        docker tag \
+          "quay.io/mmoltras/falco-test-runner:$(git branch --show-current)" \
+          quay.io/mmoltras/falco-test-runner:latest
+        docker push quay.io/mmoltras/falco-test-runner:latest

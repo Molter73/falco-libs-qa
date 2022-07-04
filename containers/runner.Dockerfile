@@ -17,4 +17,7 @@ COPY /test_* /tests/
 COPY /conftest.py /tests/conftest.py
 COPY /driver/scap.ko /driver/
 
+ARG SINSP_TAG=latest
+ENV SINSP_TAG=${SINSP_TAG}
+
 ENTRYPOINT [ "pytest", "--html=/report/report.html" ]

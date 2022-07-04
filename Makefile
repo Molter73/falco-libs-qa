@@ -1,13 +1,14 @@
 .PHONY: all
 all: tests
 
-PARALLEL_BUILDS ?= 6
+include $(CURDIR)/constants.mk
 
 .PHONY: builder
 builder:
 	docker pull quay.io/mmoltras/falco-libs-builder:latest
 	docker build \
-		--tag quay.io/mmoltras/falco-libs-builder:latest \
+		--tag quay.io/mmoltras/falco-libs-builder:$(TAG) \
+		--cache-from quay.io/mmoltras/falco-libs-builder:$(TAG) \
 		--cache-from quay.io/mmoltras/falco-libs-builder:latest \
 		-f $(CURDIR)/containers/builder.Dockerfile $(CURDIR)/containers/
 
@@ -20,7 +21,7 @@ drivers: builder
 		-v /lib/modules/:/lib/modules/:ro \
 		-v /usr/src/:/usr/src/:ro \
 		--user $(shell id -u):$(shell id -g) \
-		quay.io/mmoltras/falco-libs-builder:latest "cmake -S /libs \
+		quay.io/mmoltras/falco-libs-builder:$(TAG) "cmake -S /libs \
 		-DUSE_BUNDLED_DEPS=OFF \
 		-DBUILD_BPF=ON \
 		-B /build/driver-build && \
@@ -36,7 +37,7 @@ userspace: builder drivers
 		-v $(CURDIR)/libs:/libs \
 		-v $(CURDIR)/build:/build \
 		--user $(shell id -u):$(shell id -g) \
-		quay.io/mmoltras/falco-libs-builder:latest "cmake -DUSE_BUNDLED_DEPS=OFF \
+		quay.io/mmoltras/falco-libs-builder:$(TAG) "cmake -DUSE_BUNDLED_DEPS=OFF \
 			-DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address" \
 			-DCMAKE_C_FLAGS_DEBUG="-fsanitize=address" \
 			-DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
@@ -46,7 +47,7 @@ userspace: builder drivers
 		make -j$(PARALLEL_BUILDS) -C /build/userspace-build/libsinsp/examples sinsp-example"
 	@mkdir -p $(CURDIR)/tests/userspace/
 	cp $(CURDIR)/build/userspace-build/libsinsp/examples/sinsp-example $(CURDIR)/tests/userspace/sinsp-example
-	docker build --tag sinsp-example:latest \
+	docker build --tag sinsp-example:$(TAG) \
 		-f $(CURDIR)/containers/sinsp.Dockerfile $(CURDIR)/tests/
 
 .PHONY: tests
@@ -57,7 +58,10 @@ tests: userspace
 clean:
 	docker rmi quay.io/mmoltras/falco-libs-builder:latest \
 		sinsp-example:latest \
-		quay.io/mmoltras/falco-test-runner:latest || true
+		quay.io/mmoltras/falco-test-runner:latest \
+		quay.io/mmoltras/falco-libs-builder:$(TAG) \
+		sinsp-example:$(TAG) \
+		quay.io/mmoltras/falco-test-runner:$(TAG) \ || true
 	rm -rf $(CURDIR)/build/
 	rm -rf $(CURDIR)/tests/driver/
 	rm -rf $(CURDIR)/tests/userspace/
