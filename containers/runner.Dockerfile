@@ -2,7 +2,8 @@ FROM fedora:36
 
 WORKDIR /tests
 
-RUN dnf makecache && \
+RUN mkdir -p /logs && \
+    dnf makecache && \
     curl -fsSL https://get.docker.com | sh && \
     dnf install -y pip
 
@@ -16,6 +17,7 @@ COPY /test_* /tests/
 COPY /conftest.py /tests/conftest.py
 COPY /driver/scap.ko /driver/
 
-RUN mkdir -p /logs
+ARG SINSP_TAG=latest
+ENV SINSP_TAG=${SINSP_TAG}
 
 ENTRYPOINT [ "pytest", "--html=/report/report.html" ]

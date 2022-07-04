@@ -6,12 +6,12 @@ the following:
 ## Builder container
 This container is used as the base to compile the `sinsp-example` binary, as
 well as the drivers used with it. The container itself is built from the
-`Dockerfile.builder` file.
+`builder.Dockerfile` file.
 
 ## sinsp container
 A container holding the `sinsp-example` binary. Its entrpoint is set to the
 binary, so it can be run in the same way as explained in [this README file](https://github.com/falcosecurity/libs/blob/master/userspace/libsinsp/examples/README.md).
-The build for this container is based off of `Dockerfile.sinsp`
+The build for this container is based off of `sinsp.Dockerfile`
 
 ## Drivers
 The drivers used by `sinsp-example` to capture events on the system is
@@ -27,7 +27,7 @@ written need to follow the pattern `test_*/test_*.py` in order for them to be
 properly picked up. Additionally, a module called `sinspqa` lives in
 `tests/commons/`, it is installed directly to the tester container and is meant
 to house any functions/classes that might be useful accross multiple tests. The
-dockerfile for this image can be found under `tests/Dockerfile`.
+dockerfile for this image can be found under `runner.Dockerfile`.
 
 ## Running the tests
 As with any other repository, start by cloning it with:

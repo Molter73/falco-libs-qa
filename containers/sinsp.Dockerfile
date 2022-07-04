@@ -11,7 +11,7 @@ RUN dnf install -y \
     libasan \
     tbb
 
-COPY /tests/userspace/sinsp-example /usr/local/bin/sinsp-example
-COPY /tests/driver/probe.o /driver/probe.o
+COPY /userspace/sinsp-example /usr/local/bin/sinsp-example
+COPY /driver/probe.o /driver/probe.o
 
 ENTRYPOINT [ "sinsp-example", "-j" ]

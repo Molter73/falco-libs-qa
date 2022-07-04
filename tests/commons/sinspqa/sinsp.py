@@ -4,6 +4,7 @@ import os
 import json
 import docker
 
+SINSP_TAG = os.environ.get('SINSP_TAG', 'latest')
 
 class SinspStreamer:
     """
@@ -126,7 +127,7 @@ def sinsp_validation(container: docker.models.containers.Container) -> (bool, st
     return True, None
 
 
-def container_spec(image='sinsp-example:latest', args=[]):
+def container_spec(image=f'quay.io/mmoltras/sinsp-example:{SINSP_TAG}', args=[]):
     mounts = [
         docker.types.Mount("/dev", "/dev", type="bind",
                            consistency="delegated", read_only=True)

@@ -1,12 +1,22 @@
 .PHONY: all
 all: tests
 
-PARALLEL_BUILDS ?= 6
+include $(CURDIR)/constants.mk
+
+.PHONY: pull-caches
+pull-caches:
+ifndef SINSP_NO_CACHE
+	docker pull quay.io/mmoltras/falco-libs-builder:latest
+	docker pull quay.io/mmoltras/sinsp-example:latest
+endif
 
 .PHONY: builder
-builder:
-	docker build --tag libs-it-builder:latest \
-		-f Dockerfile.builder $(CURDIR)
+builder: pull-caches
+	docker build \
+		--tag quay.io/mmoltras/falco-libs-builder:$(TAG) \
+		--cache-from quay.io/mmoltras/falco-libs-builder:$(TAG) \
+		--cache-from quay.io/mmoltras/falco-libs-builder:latest \
+		-f $(CURDIR)/containers/builder.Dockerfile $(CURDIR)/containers/
 
 drivers: builder
 	@mkdir -p $(CURDIR)/build/driver-build/
@@ -17,11 +27,11 @@ drivers: builder
 		-v /lib/modules/:/lib/modules/:ro \
 		-v /usr/src/:/usr/src/:ro \
 		--user $(shell id -u):$(shell id -g) \
-		libs-it-builder:latest "cmake -S /libs \
-		-DUSE_BUNDLED_DEPS=OFF \
-		-DBUILD_BPF=ON \
-		-B /build/driver-build && \
-		make -j$(PARALLEL_BUILDS) -C /build/driver-build/driver"
+		quay.io/mmoltras/falco-libs-builder:$(TAG) "cmake -S /libs \
+			-DUSE_BUNDLED_DEPS=OFF \
+			-DBUILD_BPF=ON \
+			-B /build/driver-build && \
+			make -j$(PARALLEL_BUILDS) -C /build/driver-build/driver"
 	@mkdir -p $(CURDIR)/tests/driver/
 	cp $(CURDIR)/build/driver-build/driver/src/scap.ko $(CURDIR)/tests/driver/scap.ko
 	cp $(CURDIR)/build/driver-build/driver/bpf/probe.o $(CURDIR)/tests/driver/probe.o
@@ -33,18 +43,20 @@ userspace: builder drivers
 		-v $(CURDIR)/libs:/libs \
 		-v $(CURDIR)/build:/build \
 		--user $(shell id -u):$(shell id -g) \
-		libs-it-builder:latest "cmake -DUSE_BUNDLED_DEPS=OFF \
+		quay.io/mmoltras/falco-libs-builder:$(TAG) "cmake -DUSE_BUNDLED_DEPS=OFF \
 			-DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address" \
 			-DCMAKE_C_FLAGS_DEBUG="-fsanitize=address" \
 			-DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
 			-DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
 			-S /libs \
 			-B /build/userspace-build && \
-		make -j$(PARALLEL_BUILDS) -C /build/userspace-build/libsinsp/examples sinsp-example"
+			make -j$(PARALLEL_BUILDS) -C /build/userspace-build/libsinsp/examples sinsp-example"
 	@mkdir -p $(CURDIR)/tests/userspace/
 	cp $(CURDIR)/build/userspace-build/libsinsp/examples/sinsp-example $(CURDIR)/tests/userspace/sinsp-example
-	docker build --tag sinsp-example:latest \
-		-f Dockerfile.sinsp $(CURDIR)
+	docker build --tag quay.io/mmoltras/sinsp-example:$(TAG) \
+		--cache-from quay.io/mmoltras/sinsp-example:$(TAG) \
+		--cache-from quay.io/mmoltras/sinsp-example:latest \
+		-f $(CURDIR)/containers/sinsp.Dockerfile $(CURDIR)/tests/
 
 .PHONY: tests
 tests: userspace
@@ -52,9 +64,12 @@ tests: userspace
 
 .PHONY: clean
 clean:
-	docker rmi libs-it-builder:latest \
-		sinsp-example:latest \
-		falco-test-runner:latest || true
+	docker rmi quay.io/mmoltras/falco-libs-builder:latest \
+		quay.io/mmoltras/sinsp-example:latest \
+		quay.io/mmoltras/falco-test-runner:latest \
+		quay.io/mmoltras/falco-libs-builder:$(TAG) \
+		quay.io/mmoltras/sinsp-example:$(TAG) \
+		quay.io/mmoltras/falco-test-runner:$(TAG) \ || true
 	rm -rf $(CURDIR)/build/
 	rm -rf $(CURDIR)/tests/driver/
 	rm -rf $(CURDIR)/tests/userspace/
