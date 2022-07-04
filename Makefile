@@ -5,7 +5,10 @@ PARALLEL_BUILDS ?= 6
 
 .PHONY: builder
 builder:
-	docker build --tag libs-it-builder:latest \
+	docker pull quay.io/mmoltras/falco-libs-builder:latest
+	docker build \
+		--tag quay.io/mmoltras/falco-libs-builder:latest \
+		--cache-from quay.io/mmoltras/falco-libs-builder:latest \
 		-f Dockerfile.builder $(CURDIR)
 
 drivers: builder
@@ -17,7 +20,7 @@ drivers: builder
 		-v /lib/modules/:/lib/modules/:ro \
 		-v /usr/src/:/usr/src/:ro \
 		--user $(shell id -u):$(shell id -g) \
-		libs-it-builder:latest "cmake -S /libs \
+		quay.io/mmoltras/falco-libs-builder:latest "cmake -S /libs \
 		-DUSE_BUNDLED_DEPS=OFF \
 		-DBUILD_BPF=ON \
 		-B /build/driver-build && \
@@ -33,7 +36,7 @@ userspace: builder drivers
 		-v $(CURDIR)/libs:/libs \
 		-v $(CURDIR)/build:/build \
 		--user $(shell id -u):$(shell id -g) \
-		libs-it-builder:latest "cmake -DUSE_BUNDLED_DEPS=OFF \
+		quay.io/mmoltras/falco-libs-builder:latest "cmake -DUSE_BUNDLED_DEPS=OFF \
 			-DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address" \
 			-DCMAKE_C_FLAGS_DEBUG="-fsanitize=address" \
 			-DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
@@ -52,7 +55,7 @@ tests: userspace
 
 .PHONY: clean
 clean:
-	docker rmi libs-it-builder:latest \
+	docker rmi quay.io/mmoltras/falco-libs-builder:latest \
 		sinsp-example:latest \
 		falco-test-runner:latest || true
 	rm -rf $(CURDIR)/build/
