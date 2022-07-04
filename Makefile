@@ -47,7 +47,7 @@ userspace: builder drivers
 	@mkdir -p $(CURDIR)/tests/userspace/
 	cp $(CURDIR)/build/userspace-build/libsinsp/examples/sinsp-example $(CURDIR)/tests/userspace/sinsp-example
 	docker build --tag sinsp-example:latest \
-		-f sinsp.Dockerfile $(CURDIR)/tests/
+		-f $(CURDIR)/containers/sinsp.Dockerfile $(CURDIR)/tests/
 
 .PHONY: tests
 tests: userspace

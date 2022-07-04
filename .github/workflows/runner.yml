@@ -22,4 +22,4 @@ jobs:
           push: true
           tags: quay.io/mmoltras/falco-test-runner:latest
           file: containers/tester.Dockerfile
-          context: "{{defaultContext}}:tests/"
+          context: ./tests/

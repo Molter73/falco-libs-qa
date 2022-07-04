@@ -22,4 +22,4 @@ jobs:
           push: true
           tags: quay.io/mmoltras/falco-libs-builder:latest
           file: containers/builder.Dockerfile
-          context: "{{defaultContext}}:containers/"
+          context: ./containers/
