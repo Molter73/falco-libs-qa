@@ -23,6 +23,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: tests
-          file: containers/tester.Dockerfile
+          file: containers/runner.Dockerfile
           tags: quay.io/mmoltras/falco-test-runner:latest
           push: true
