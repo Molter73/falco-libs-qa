@@ -17,6 +17,7 @@ jobs:
 
     - name: Build and test Falco/libs
       run: |
+        echo "$GITHUB_REF_NAME"
         if [[ "$GITHUB_REF_NAME" == "master" ]]; then
           export SINSP_NO_CACHE="true"
         fi
@@ -41,7 +42,7 @@ jobs:
         password: ${{ secrets.QUAY_TOKEN }}
 
     - name: Push builder cache
-      if: ${{ github.ref == 'refs/heads/cache-images' }}
+      if: ${{ env.GITHUB_REF_NAME == 'cache-images' }}
       run: |
         docker tag \
           "quay.io/mmoltras/falco-libs-builder:$(git rev-parse HEAD)" \
@@ -49,7 +50,7 @@ jobs:
         docker push quay.io/mmoltras/falco-libs-builder:latest
 
     - name: Push sinsp-example cache
-      if: ${{ github.ref == 'refs/heads/cache-images' }}
+      if: ${{ env.GITHUB_REF_NAME == 'cache-images' }}
       run: |
         docker tag \
           "quay.io/mmoltras/sinsp-example:$(git rev-parse HEAD)" \
@@ -57,7 +58,7 @@ jobs:
         docker push quay.io/mmoltras/sinsp-example:latest
 
     - name: Push runner cache
-      if: ${{ github.ref == 'refs/heads/cache-images' }}
+      if: ${{ env.GITHUB_REF_NAME == 'cache-images' }}
       run: |
         docker tag \
           "quay.io/mmoltras/falco-test-runner:$(git rev-parse HEAD)" \
