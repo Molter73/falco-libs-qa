@@ -1,23 +1,15 @@
 import pytest
 import re
-from sinspqa import sinsp
+from sinspqa import sinsp, event_generator
 from sinspqa.sinsp import assert_events, SinspField
 
 sinsp_filters = ["-f", "evt.is_open_write=true and fd.typechar='f' and fd.num>=0"]
 
 
-def create_generator(syscall):
-    return {
-        'image': 'falcosecurity/event-generator',
-        'args': ['run', syscall],
-        'privileged': True,
-    }
-
-
 def create_containers(syscall):
     return {
         'sinsp': sinsp.container_spec(args=sinsp_filters),
-        'generator': create_generator(syscall),
+        'generator': event_generator.container_spec(syscall),
     }
 
 

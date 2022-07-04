@@ -1,21 +1,13 @@
 import pytest
-from sinspqa import sinsp
+from sinspqa import sinsp, event_generator
 from sinspqa.sinsp import assert_events, SinspField
 
 sinsp_filters = ["-f", "proc.name = event-generator"]
 
 
-def create_generator(syscall):
-    return {
-        'image': 'falcosecurity/event-generator',
-        'args': ['run', syscall],
-        'privileged': True,
-    }
-
-
 containers = [{
     'sinsp': sinsp.container_spec(args=sinsp_filters),
-    'generator': create_generator('syscall.MkdirBinaryDirs'),
+    'generator': event_generator.container_spec('syscall.MkdirBinaryDirs'),
 }]
 
 

@@ -1,16 +1,12 @@
 import pytest
-from sinspqa import sinsp
+from sinspqa import sinsp, event_generator
 from sinspqa.sinsp import assert_events
 
 sinsp_filters = ["-f", "evt.type=setuid"]
 
 containers = [{
     'sinsp': sinsp.container_spec(args=sinsp_filters),
-    'generator': {
-        'image': 'falcosecurity/event-generator',
-        'args': ['run', 'syscall.NonSudoSetuid'],
-        'privileged': True,
-    },
+    'generator': event_generator.container_spec('syscall.NonSudoSetuid'),
 }]
 
 

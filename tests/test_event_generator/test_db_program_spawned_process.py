@@ -1,5 +1,5 @@
 import pytest
-from sinspqa import sinsp
+from sinspqa import sinsp, event_generator
 from sinspqa.sinsp import assert_events, SinspField
 from sinspqa.docker import get_container_id
 
@@ -7,11 +7,7 @@ sinsp_filters = ["-f", "evt.category=process and not container.id=host"]
 
 containers = [{
     'sinsp': sinsp.container_spec(args=sinsp_filters),
-    'generator': {
-        'image': 'falcosecurity/event-generator',
-        'args': ['run', 'syscall.DbProgramSpawnedProcess'],
-        'privileged': True,
-    },
+    'generator': event_generator.container_spec('syscall.DbProgramSpawnedProcess')
 }]
 
 
