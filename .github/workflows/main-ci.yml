@@ -34,7 +34,7 @@ jobs:
           tests/report/
 
     - name: Login to Quay.io
-      if: ${{ github.ref == '10/merge' }}
+      if: ${{ github.ref_name == '10/merge' }}
       uses: docker/login-action@v2
       with:
         registry: quay.io
