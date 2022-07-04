@@ -9,7 +9,7 @@ builder:
 	docker build \
 		--tag quay.io/mmoltras/falco-libs-builder:latest \
 		--cache-from quay.io/mmoltras/falco-libs-builder:latest \
-		-f Dockerfile.builder $(CURDIR)
+		-f $(CURDIR)/containers/Dockerfile.builder $(CURDIR)/containers/
 
 drivers: builder
 	@mkdir -p $(CURDIR)/build/driver-build/
@@ -47,7 +47,7 @@ userspace: builder drivers
 	@mkdir -p $(CURDIR)/tests/userspace/
 	cp $(CURDIR)/build/userspace-build/libsinsp/examples/sinsp-example $(CURDIR)/tests/userspace/sinsp-example
 	docker build --tag sinsp-example:latest \
-		-f Dockerfile.sinsp $(CURDIR)
+		-f sinsp.Dockerfile $(CURDIR)/tests/
 
 .PHONY: tests
 tests: userspace
@@ -57,7 +57,7 @@ tests: userspace
 clean:
 	docker rmi quay.io/mmoltras/falco-libs-builder:latest \
 		sinsp-example:latest \
-		falco-test-runner:latest || true
+		quay.io/mmoltras/falco-test-runner:latest || true
 	rm -rf $(CURDIR)/build/
 	rm -rf $(CURDIR)/tests/driver/
 	rm -rf $(CURDIR)/tests/userspace/

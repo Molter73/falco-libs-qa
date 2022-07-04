@@ -3,7 +3,11 @@ all: run-tests
 
 .PHONY: build-tester
 build-tester:
-	docker build --tag falco-test-runner:latest .
+	docker pull quay.io/mmoltras/falco-test-runner:latest
+	docker build \
+	--tag quay.io/mmoltras/falco-test-runner:latest \
+	--cache-from quay.io/mmoltras/falco-test-runner:latest \
+	-f $(CURDIR)/../containers/runner.Dockerfile $(CURDIR)
 
 .PHONY: kmod-tests
 kmod-tests: build-tester
@@ -14,7 +18,7 @@ kmod-tests: build-tester
 		-v /dev:/dev:ro \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $(CURDIR)/report/kmod:/report \
-		falco-test-runner:latest
+		quay.io/mmoltras/falco-test-runner:latest
 
 .PHONY: ebpf-tests
 ebpf-tests: build-tester
@@ -26,7 +30,7 @@ ebpf-tests: build-tester
 		-v /dev:/dev:ro \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $(CURDIR)/report/ebpf:/report \
-		falco-test-runner:latest
+		quay.io/mmoltras/falco-test-runner:latest
 
 .PHONY: run-tests
 run-tests: kmod-tests ebpf-tests

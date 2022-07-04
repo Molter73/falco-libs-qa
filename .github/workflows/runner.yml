@@ -1,4 +1,4 @@
-name: Build and cache Falco libs builder
+name: Build and cache Falco test runner
 
 on:
   push:
@@ -20,6 +20,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: quay.io/mmoltras/falco-libs-builder:latest
-          file: containers/builder.Dockerfile
-          context: containers/
+          tags: quay.io/mmoltras/falco-test-runner:latest
+          file: containers/tester.Dockerfile
+          context: tests/
