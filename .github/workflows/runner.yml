@@ -19,7 +19,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          push: true
-          tags: quay.io/mmoltras/falco-test-runner:latest
+          context: tests
           file: containers/tester.Dockerfile
-          context: ./tests/
+          tags: quay.io/mmoltras/falco-test-runner:latest
+          push: true
