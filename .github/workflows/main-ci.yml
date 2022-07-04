@@ -17,6 +17,10 @@ jobs:
 
     - name: Build and test Falco/libs
       run: |
+        if [[ "$GITHUB_REF_NAME" == "master" ]]; then
+          export SINSP_NO_CACHE="true"
+        fi
+
         PARALLEL_BUILDS="$(nproc)" make userspace
         make -C tests kmod-tests
 
@@ -29,7 +33,7 @@ jobs:
           tests/report/
 
     - name: Login to Quay.io
-      if: github.ref == 'refs/heads/cache-images'
+      if: ${{ github.ref == 'refs/heads/cache-images' }}
       uses: docker/login-action@v2
       with:
         registry: quay.io
@@ -37,17 +41,25 @@ jobs:
         password: ${{ secrets.QUAY_TOKEN }}
 
     - name: Push builder cache
-      if: github.ref == 'refs/heads/cache-images'
+      if: ${{ github.ref == 'refs/heads/cache-images' }}
       run: |
         docker tag \
-          "quay.io/mmoltras/falco-libs-builder:$(git branch --show-current)" \
+          "quay.io/mmoltras/falco-libs-builder:$(git rev-parse HEAD)" \
           quay.io/mmoltras/falco-libs-builder:latest
         docker push quay.io/mmoltras/falco-libs-builder:latest
 
-    - name: Push runner cache
-      if: github.ref == 'refs/heads/cache-images'
+    - name: Push sinsp-example cache
+      if: ${{ github.ref == 'refs/heads/cache-images' }}
       run: |
         docker tag \
-          "quay.io/mmoltras/falco-test-runner:$(git branch --show-current)" \
+          "quay.io/mmoltras/sinsp-example:$(git rev-parse HEAD)" \
+          quay.io/mmoltras/sinsp-example:latest
+        docker push quay.io/mmoltras/sinsp-example:latest
+
+    - name: Push runner cache
+      if: ${{ github.ref == 'refs/heads/cache-images' }}
+      run: |
+        docker tag \
+          "quay.io/mmoltras/falco-test-runner:$(git rev-parse HEAD)" \
           quay.io/mmoltras/falco-test-runner:latest
         docker push quay.io/mmoltras/falco-test-runner:latest

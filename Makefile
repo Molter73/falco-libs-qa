@@ -3,9 +3,15 @@ all: tests
 
 include $(CURDIR)/constants.mk
 
-.PHONY: builder
-builder:
+.PHONY: pull-caches
+pull-caches:
+ifndef SINSP_NO_CACHE
 	docker pull quay.io/mmoltras/falco-libs-builder:latest
+	docker pull quay.io/mmoltras/sinsp-example:latest
+endif
+
+.PHONY: builder
+builder: pull-caches
 	docker build \
 		--tag quay.io/mmoltras/falco-libs-builder:$(TAG) \
 		--cache-from quay.io/mmoltras/falco-libs-builder:$(TAG) \
@@ -22,10 +28,10 @@ drivers: builder
 		-v /usr/src/:/usr/src/:ro \
 		--user $(shell id -u):$(shell id -g) \
 		quay.io/mmoltras/falco-libs-builder:$(TAG) "cmake -S /libs \
-		-DUSE_BUNDLED_DEPS=OFF \
-		-DBUILD_BPF=ON \
-		-B /build/driver-build && \
-		make -j$(PARALLEL_BUILDS) -C /build/driver-build/driver"
+			-DUSE_BUNDLED_DEPS=OFF \
+			-DBUILD_BPF=ON \
+			-B /build/driver-build && \
+			make -j$(PARALLEL_BUILDS) -C /build/driver-build/driver"
 	@mkdir -p $(CURDIR)/tests/driver/
 	cp $(CURDIR)/build/driver-build/driver/src/scap.ko $(CURDIR)/tests/driver/scap.ko
 	cp $(CURDIR)/build/driver-build/driver/bpf/probe.o $(CURDIR)/tests/driver/probe.o
@@ -44,10 +50,12 @@ userspace: builder drivers
 			-DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
 			-S /libs \
 			-B /build/userspace-build && \
-		make -j$(PARALLEL_BUILDS) -C /build/userspace-build/libsinsp/examples sinsp-example"
+			make -j$(PARALLEL_BUILDS) -C /build/userspace-build/libsinsp/examples sinsp-example"
 	@mkdir -p $(CURDIR)/tests/userspace/
 	cp $(CURDIR)/build/userspace-build/libsinsp/examples/sinsp-example $(CURDIR)/tests/userspace/sinsp-example
-	docker build --tag sinsp-example:$(TAG) \
+	docker build --tag quay.io/mmoltras/sinsp-example:$(TAG) \
+		--cache-from quay.io/mmoltras/sinsp-example:$(TAG) \
+		--cache-from quay.io/mmoltras/sinsp-example:latest \
 		-f $(CURDIR)/containers/sinsp.Dockerfile $(CURDIR)/tests/
 
 .PHONY: tests
@@ -57,10 +65,10 @@ tests: userspace
 .PHONY: clean
 clean:
 	docker rmi quay.io/mmoltras/falco-libs-builder:latest \
-		sinsp-example:latest \
+		quay.io/mmoltras/sinsp-example:latest \
 		quay.io/mmoltras/falco-test-runner:latest \
 		quay.io/mmoltras/falco-libs-builder:$(TAG) \
-		sinsp-example:$(TAG) \
+		quay.io/mmoltras/sinsp-example:$(TAG) \
 		quay.io/mmoltras/falco-test-runner:$(TAG) \ || true
 	rm -rf $(CURDIR)/build/
 	rm -rf $(CURDIR)/tests/driver/

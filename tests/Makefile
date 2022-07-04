@@ -3,9 +3,14 @@ all: run-tests
 
 include $(CURDIR)/../constants.mk
 
-.PHONY: build-tester
-build-tester:
+.PHONY: pull-cache
+pull-cache:
+ifndef SINSP_NO_CACHE
 	docker pull quay.io/mmoltras/falco-test-runner:latest
+endif
+
+.PHONY: build-tester
+build-tester: pull-cache
 	docker build \
 		--build-arg SINSP_TAG=$(TAG) \
 		--tag quay.io/mmoltras/falco-test-runner:$(TAG) \
