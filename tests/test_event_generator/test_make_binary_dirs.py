@@ -3,8 +3,6 @@ from sinspqa import sinsp, event_generator
 from sinspqa.sinsp import assert_events, SinspField
 
 sinsp_filters = ["-f", "proc.name = event-generator"]
-
-
 containers = [{
     'sinsp': sinsp.container_spec(args=sinsp_filters),
     'generator': event_generator.container_spec('syscall.MkdirBinaryDirs'),
