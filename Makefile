@@ -62,6 +62,17 @@ userspace: builder drivers
 tests: userspace
 	make -C tests
 
+.PHONY: clean-drivers
+clean-drivers:
+	rm -rf $(CURDIR)/libs/driver/bpf/probe.{ll,o}
+	rm -rf $(CURDIR)/libs/driver/bpf/.Module.symvers.cmd
+	rm -rf $(CURDIR)/libs/driver/bpf/Module.symvers
+	rm -rf $(CURDIR)/libs/driver/bpf/.modules.order.cmd
+	rm -rf $(CURDIR)/libs/driver/bpf/modules.order
+	rm -rf $(CURDIR)/libs/driver/driver_config.h
+	rm -rf $(CURDIR)/build/driver-build
+	rm -rf $(CURDIR)/tests/driver/
+
 .PHONY: clean
 clean:
 	docker rmi quay.io/mmoltras/falco-libs-builder:latest \
@@ -69,14 +80,7 @@ clean:
 		quay.io/mmoltras/falco-test-runner:latest \
 		quay.io/mmoltras/falco-libs-builder:$(TAG) \
 		quay.io/mmoltras/sinsp-example:$(TAG) \
-		quay.io/mmoltras/falco-test-runner:$(TAG) \ || true
+		quay.io/mmoltras/falco-test-runner:$(TAG) || true
 	rm -rf $(CURDIR)/build/
-	rm -rf $(CURDIR)/tests/driver/
 	rm -rf $(CURDIR)/tests/userspace/
 	rm -rf $(CURDIR)/tests/report/
-	rm -rf $(CURDIR)/libs/driver/bpf/probe.{ll,o}
-	rm -rf $(CURDIR)/libs/driver/bpf/.Module.symvers.cmd
-	rm -rf $(CURDIR)/libs/driver/bpf/Module.symvers
-	rm -rf $(CURDIR)/libs/driver/bpf/.modules.order.cmd
-	rm -rf $(CURDIR)/libs/driver/bpf/modules.order
-	rm -rf $(CURDIR)/libs/driver/driver_config.h

@@ -14,4 +14,4 @@ RUN dnf install -y \
 COPY /userspace/sinsp-example /usr/local/bin/sinsp-example
 COPY /driver/probe.o /driver/probe.o
 
-ENTRYPOINT [ "sinsp-example", "-j" ]
+ENTRYPOINT [ "sinsp-example", "-j", "-a" ]
