@@ -1,3 +1,5 @@
+[![Falco libs QA](https://github.com/Molter73/falco-libs-qa/actions/workflows/main-ci.yml/badge.svg)](https://github.com/Molter73/falco-libs-qa/actions/workflows/main-ci.yml)
+
 This repository is a PoC. Its main idea is to leverage the `sinsp-example`
 binary from the `falcosecurity/libs` repository and their drivers as a way
 of running e2e tests on it. The main components used to achieve this are
@@ -14,11 +16,11 @@ binary, so it can be run in the same way as explained in [this README file](http
 The build for this container is based off of `sinsp.Dockerfile`
 
 ## Drivers
-The drivers used by `sinsp-example` to capture events on the system is
+The drivers used by `sinsp-example` to capture events on the system are
 also built as part of this repository. The only requirement for this is to have
 the kernel headers for the machine docker is running on installed. There is no
 specific dockerfile for this step, instead the builder image is run and the
-driver are output under `tests/driver/`.
+drivers are output under `tests/driver/`.
 
 ## Tester container
 This container is in charge of running any tests that are created under the
@@ -50,4 +52,9 @@ In case the tests need to be re-run without rebuilding all containers,
 ## Potential future improvements
 Aside from the obvious improvement of adding additional tests, here are some
 ideas of things that could be changed to improve the quality of the tests:
-- Allow fields on an event to be validated with regex for greater flexibility
+- Refactor the `sinsp-example` container to handle loading and unloading of the
+  kernel module, this should make it easier to run it as a standalone container.
+  Also allow configuration of the path to the kernel module, that way externally
+  built drivers could be used by mounting them in the container.
+- Implement a way to check non-deterministic values such as `pids` are found in
+  subsequent events.
