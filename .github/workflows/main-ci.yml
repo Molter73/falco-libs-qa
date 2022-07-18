@@ -22,8 +22,7 @@ jobs:
           echo "Running without cache."
         fi
 
-        PARALLEL_BUILDS="$(nproc)" make userspace
-        make -C tests kmod-tests
+        PARALLEL_BUILDS="$(nproc)" make
 
     - name: Archive test reports
       uses: actions/upload-artifact@v3
