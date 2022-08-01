@@ -29,6 +29,7 @@ drivers: builder
 		--user $(shell id -u):$(shell id -g) \
 		quay.io/mmoltras/falco-libs-builder:$(TAG) "cmake -S /libs \
 			-DUSE_BUNDLED_DEPS=OFF \
+			-DUSE_BUNDLED_VALIJSON=ON \
 			-DBUILD_BPF=ON \
 			-B /build/driver-build && \
 			make -j$(PARALLEL_BUILDS) -C /build/driver-build/driver"
