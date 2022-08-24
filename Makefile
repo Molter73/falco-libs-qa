@@ -45,6 +45,7 @@ userspace: builder drivers
 		-v $(CURDIR)/build:/build \
 		--user $(shell id -u):$(shell id -g) \
 		quay.io/mmoltras/falco-libs-builder:$(TAG) "cmake -DUSE_BUNDLED_DEPS=OFF \
+			-DUSE_BUNDLED_VALIJSON=ON \
 			-DCMAKE_CXX_FLAGS_DEBUG="-fsanitize=address" \
 			-DCMAKE_C_FLAGS_DEBUG="-fsanitize=address" \
 			-DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
