@@ -107,7 +107,12 @@ def parse_log(log):
     Returns:
         A dictionary holding all the captured values for the event, except the timestamp.
     """
-    return json.loads(log)
+    try:
+        return json.loads(log)
+    except json.JSONDecodeError as e:
+        print(f'Failed to parse JSON: {e}')
+        print(log)
+        return None
 
 
 def validate_event(expected_fields, event):
@@ -121,6 +126,9 @@ def validate_event(expected_fields, event):
     Returns:
         True if all `expected_fields` are in the event and have matching values, False otherwise.
     """
+    if event is None:
+        return False
+
     for k in expected_fields:
         if k not in event:
             return False
@@ -182,6 +190,10 @@ def container_spec(image=f'quay.io/mmoltras/sinsp-example:{SINSP_TAG}', args=[])
 
     if is_ebpf():
         environment["BPF_PROBE"] = os.environ.get("BPF_PROBE")
+        args.extend([
+            '-e', 'bpf',
+            '-b', os.environ['BPF_PROBE']
+        ])
 
     return {
         'image': image,
